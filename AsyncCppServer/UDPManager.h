@@ -1,9 +1,11 @@
 #pragma once
 #include <Macros.h>
-#include <vector>
 #include <boost/enable_shared_from_this.hpp>
 #include <boost/shared_ptr.hpp>
 #include <boost/asio/ip/udp.hpp>
+#include <boost/thread/mutex.hpp>
+#include <queue>
+#include <vector>
 
 class OPacket;
 class Server;
@@ -19,6 +21,7 @@ public:
 	void send(const boost::asio::ip::udp::endpoint* remoteEP, boost::shared_ptr<std::vector<unsigned char>> sendData);
 	void send(const boost::asio::ip::udp::endpoint* remoteEP, boost::shared_ptr<OPacket> oPack);
 	void read();
+	void close();
 
 	~UDPManager();
 
@@ -26,9 +29,13 @@ private:
 	void asyncReceive(const boost::system::error_code& error, unsigned int nBytes);
 	void asyncSend(const boost::system::error_code& error, boost::shared_ptr<std::vector<unsigned char>> sendData);
 	std::vector<unsigned char>* receiveData;
+	std::queue <std::pair <const boost::asio::ip::udp::endpoint*, boost::shared_ptr<std::vector <unsigned char>>>> queueSendData;
 	boost::asio::ip::udp::endpoint receiveEP;
-	boost::asio::ip::udp::socket* socket;
+	boost::shared_ptr<boost::asio::ip::udp::socket> socket;
 	HeaderManager* hm;
 	Server* server;
+	boost::mutex sendingMutex;
+	boost::mutex queueSendDataMutex;
+	bool sending;
 	int errorMode;
 };

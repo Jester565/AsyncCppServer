@@ -37,38 +37,40 @@ void protobuf_AssignDesc_PackFW_2eproto() {
       "PackFW.proto");
   GOOGLE_CHECK(file != NULL);
   PackHeaderIn_descriptor_ = file->message_type(0);
-  static const int PackHeaderIn_offsets_[3] = {
+  static const int PackHeaderIn_offsets_[4] = {
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(PackHeaderIn, serverread_),
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(PackHeaderIn, lockey_),
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(PackHeaderIn, sendtoids_),
+    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(PackHeaderIn, datasize_),
   };
   PackHeaderIn_reflection_ =
     ::google::protobuf::internal::GeneratedMessageReflection::NewGeneratedMessageReflection(
       PackHeaderIn_descriptor_,
       PackHeaderIn::default_instance_,
       PackHeaderIn_offsets_,
-      GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(PackHeaderIn, _has_bits_[0]),
+      -1,
       -1,
       -1,
       sizeof(PackHeaderIn),
       GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(PackHeaderIn, _internal_metadata_),
-      -1);
+      GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(PackHeaderIn, _is_default_instance_));
   PackHeaderOut_descriptor_ = file->message_type(1);
-  static const int PackHeaderOut_offsets_[2] = {
+  static const int PackHeaderOut_offsets_[3] = {
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(PackHeaderOut, lockey_),
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(PackHeaderOut, sentfromid_),
+    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(PackHeaderOut, datasize_),
   };
   PackHeaderOut_reflection_ =
     ::google::protobuf::internal::GeneratedMessageReflection::NewGeneratedMessageReflection(
       PackHeaderOut_descriptor_,
       PackHeaderOut::default_instance_,
       PackHeaderOut_offsets_,
-      GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(PackHeaderOut, _has_bits_[0]),
+      -1,
       -1,
       -1,
       sizeof(PackHeaderOut),
       GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(PackHeaderOut, _internal_metadata_),
-      -1);
+      GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(PackHeaderOut, _is_default_instance_));
 }
 
 namespace {
@@ -103,10 +105,11 @@ void protobuf_AddDesc_PackFW_2eproto() {
   GOOGLE_PROTOBUF_VERIFY_VERSION;
 
   ::google::protobuf::DescriptorPool::InternalAddGeneratedFile(
-    "\n\014PackFW.proto\022\017ProtobufPackets\"E\n\014PackH"
+    "\n\014PackFW.proto\022\017ProtobufPackets\"W\n\014PackH"
     "eaderIn\022\022\n\nserverRead\030\001 \001(\010\022\016\n\006locKey\030\002 "
-    "\001(\t\022\021\n\tsendToIDs\030\003 \003(\r\"3\n\rPackHeaderOut\022"
-    "\016\n\006locKey\030\001 \001(\t\022\022\n\nsentFromID\030\002 \001(\r", 155);
+    "\001(\t\022\021\n\tsendToIDs\030\003 \003(\r\022\020\n\010dataSize\030\004 \001(\r"
+    "\"E\n\rPackHeaderOut\022\016\n\006locKey\030\001 \001(\t\022\022\n\nsen"
+    "tFromID\030\002 \001(\r\022\020\n\010dataSize\030\003 \001(\rb\006proto3", 199);
   ::google::protobuf::MessageFactory::InternalRegisterGeneratedFile(
     "PackFW.proto", &protobuf_RegisterTypes);
   PackHeaderIn::default_instance_ = new PackHeaderIn();
@@ -139,6 +142,7 @@ static void MergeFromFail(int line) {
 const int PackHeaderIn::kServerReadFieldNumber;
 const int PackHeaderIn::kLocKeyFieldNumber;
 const int PackHeaderIn::kSendToIDsFieldNumber;
+const int PackHeaderIn::kDataSizeFieldNumber;
 #endif  // !defined(_MSC_VER) || _MSC_VER >= 1900
 
 PackHeaderIn::PackHeaderIn()
@@ -148,6 +152,7 @@ PackHeaderIn::PackHeaderIn()
 }
 
 void PackHeaderIn::InitAsDefaultInstance() {
+  _is_default_instance_ = true;
 }
 
 PackHeaderIn::PackHeaderIn(const PackHeaderIn& from)
@@ -159,11 +164,12 @@ PackHeaderIn::PackHeaderIn(const PackHeaderIn& from)
 }
 
 void PackHeaderIn::SharedCtor() {
+    _is_default_instance_ = false;
   ::google::protobuf::internal::GetEmptyString();
   _cached_size_ = 0;
   serverread_ = false;
   lockey_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-  ::memset(_has_bits_, 0, sizeof(_has_bits_));
+  datasize_ = 0u;
 }
 
 PackHeaderIn::~PackHeaderIn() {
@@ -203,17 +209,21 @@ PackHeaderIn* PackHeaderIn::New(::google::protobuf::Arena* arena) const {
 }
 
 void PackHeaderIn::Clear() {
-  if (_has_bits_[0 / 32] & 3u) {
-    serverread_ = false;
-    if (has_lockey()) {
-      lockey_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-    }
-  }
+#define ZR_HELPER_(f) reinterpret_cast<char*>(\
+  &reinterpret_cast<PackHeaderIn*>(16)->f)
+
+#define ZR_(first, last) do {\
+  ::memset(&first, 0,\
+           ZR_HELPER_(last) - ZR_HELPER_(first) + sizeof(last));\
+} while (0)
+
+  ZR_(serverread_, datasize_);
+  lockey_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+
+#undef ZR_HELPER_
+#undef ZR_
+
   sendtoids_.Clear();
-  ::memset(_has_bits_, 0, sizeof(_has_bits_));
-  if (_internal_metadata_.have_unknown_fields()) {
-    mutable_unknown_fields()->Clear();
-  }
 }
 
 bool PackHeaderIn::MergePartialFromCodedStream(
@@ -232,7 +242,7 @@ bool PackHeaderIn::MergePartialFromCodedStream(
           DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
                    bool, ::google::protobuf::internal::WireFormatLite::TYPE_BOOL>(
                  input, &serverread_)));
-          set_has_serverread();
+
         } else {
           goto handle_unusual;
         }
@@ -246,32 +256,46 @@ bool PackHeaderIn::MergePartialFromCodedStream(
          parse_locKey:
           DO_(::google::protobuf::internal::WireFormatLite::ReadString(
                 input, this->mutable_lockey()));
-          ::google::protobuf::internal::WireFormat::VerifyUTF8StringNamedField(
+          DO_(::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
             this->lockey().data(), this->lockey().length(),
-            ::google::protobuf::internal::WireFormat::PARSE,
-            "ProtobufPackets.PackHeaderIn.locKey");
+            ::google::protobuf::internal::WireFormatLite::PARSE,
+            "ProtobufPackets.PackHeaderIn.locKey"));
         } else {
           goto handle_unusual;
         }
-        if (input->ExpectTag(24)) goto parse_sendToIDs;
+        if (input->ExpectTag(26)) goto parse_sendToIDs;
         break;
       }
 
       // repeated uint32 sendToIDs = 3;
       case 3: {
-        if (tag == 24) {
+        if (tag == 26) {
          parse_sendToIDs:
-          DO_((::google::protobuf::internal::WireFormatLite::ReadRepeatedPrimitive<
-                   ::google::protobuf::uint32, ::google::protobuf::internal::WireFormatLite::TYPE_UINT32>(
-                 1, 24, input, this->mutable_sendtoids())));
-        } else if (tag == 26) {
-          DO_((::google::protobuf::internal::WireFormatLite::ReadPackedPrimitiveNoInline<
+          DO_((::google::protobuf::internal::WireFormatLite::ReadPackedPrimitive<
                    ::google::protobuf::uint32, ::google::protobuf::internal::WireFormatLite::TYPE_UINT32>(
                  input, this->mutable_sendtoids())));
+        } else if (tag == 24) {
+          DO_((::google::protobuf::internal::WireFormatLite::ReadRepeatedPrimitiveNoInline<
+                   ::google::protobuf::uint32, ::google::protobuf::internal::WireFormatLite::TYPE_UINT32>(
+                 1, 26, input, this->mutable_sendtoids())));
         } else {
           goto handle_unusual;
         }
-        if (input->ExpectTag(24)) goto parse_sendToIDs;
+        if (input->ExpectTag(32)) goto parse_dataSize;
+        break;
+      }
+
+      // optional uint32 dataSize = 4;
+      case 4: {
+        if (tag == 32) {
+         parse_dataSize:
+          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
+                   ::google::protobuf::uint32, ::google::protobuf::internal::WireFormatLite::TYPE_UINT32>(
+                 input, &datasize_)));
+
+        } else {
+          goto handle_unusual;
+        }
         if (input->ExpectAtEnd()) goto success;
         break;
       }
@@ -283,8 +307,7 @@ bool PackHeaderIn::MergePartialFromCodedStream(
             ::google::protobuf::internal::WireFormatLite::WIRETYPE_END_GROUP) {
           goto success;
         }
-        DO_(::google::protobuf::internal::WireFormat::SkipField(
-              input, tag, mutable_unknown_fields()));
+        DO_(::google::protobuf::internal::WireFormatLite::SkipField(input, tag));
         break;
       }
     }
@@ -302,30 +325,35 @@ void PackHeaderIn::SerializeWithCachedSizes(
     ::google::protobuf::io::CodedOutputStream* output) const {
   // @@protoc_insertion_point(serialize_start:ProtobufPackets.PackHeaderIn)
   // optional bool serverRead = 1;
-  if (has_serverread()) {
+  if (this->serverread() != 0) {
     ::google::protobuf::internal::WireFormatLite::WriteBool(1, this->serverread(), output);
   }
 
   // optional string locKey = 2;
-  if (has_lockey()) {
-    ::google::protobuf::internal::WireFormat::VerifyUTF8StringNamedField(
+  if (this->lockey().size() > 0) {
+    ::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
       this->lockey().data(), this->lockey().length(),
-      ::google::protobuf::internal::WireFormat::SERIALIZE,
+      ::google::protobuf::internal::WireFormatLite::SERIALIZE,
       "ProtobufPackets.PackHeaderIn.locKey");
     ::google::protobuf::internal::WireFormatLite::WriteStringMaybeAliased(
       2, this->lockey(), output);
   }
 
   // repeated uint32 sendToIDs = 3;
+  if (this->sendtoids_size() > 0) {
+    ::google::protobuf::internal::WireFormatLite::WriteTag(3, ::google::protobuf::internal::WireFormatLite::WIRETYPE_LENGTH_DELIMITED, output);
+    output->WriteVarint32(_sendtoids_cached_byte_size_);
+  }
   for (int i = 0; i < this->sendtoids_size(); i++) {
-    ::google::protobuf::internal::WireFormatLite::WriteUInt32(
-      3, this->sendtoids(i), output);
+    ::google::protobuf::internal::WireFormatLite::WriteUInt32NoTag(
+      this->sendtoids(i), output);
   }
 
-  if (_internal_metadata_.have_unknown_fields()) {
-    ::google::protobuf::internal::WireFormat::SerializeUnknownFields(
-        unknown_fields(), output);
+  // optional uint32 dataSize = 4;
+  if (this->datasize() != 0) {
+    ::google::protobuf::internal::WireFormatLite::WriteUInt32(4, this->datasize(), output);
   }
+
   // @@protoc_insertion_point(serialize_end:ProtobufPackets.PackHeaderIn)
 }
 
@@ -333,15 +361,15 @@ void PackHeaderIn::SerializeWithCachedSizes(
     ::google::protobuf::uint8* target) const {
   // @@protoc_insertion_point(serialize_to_array_start:ProtobufPackets.PackHeaderIn)
   // optional bool serverRead = 1;
-  if (has_serverread()) {
+  if (this->serverread() != 0) {
     target = ::google::protobuf::internal::WireFormatLite::WriteBoolToArray(1, this->serverread(), target);
   }
 
   // optional string locKey = 2;
-  if (has_lockey()) {
-    ::google::protobuf::internal::WireFormat::VerifyUTF8StringNamedField(
+  if (this->lockey().size() > 0) {
+    ::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
       this->lockey().data(), this->lockey().length(),
-      ::google::protobuf::internal::WireFormat::SERIALIZE,
+      ::google::protobuf::internal::WireFormatLite::SERIALIZE,
       "ProtobufPackets.PackHeaderIn.locKey");
     target =
       ::google::protobuf::internal::WireFormatLite::WriteStringToArray(
@@ -349,15 +377,24 @@ void PackHeaderIn::SerializeWithCachedSizes(
   }
 
   // repeated uint32 sendToIDs = 3;
+  if (this->sendtoids_size() > 0) {
+    target = ::google::protobuf::internal::WireFormatLite::WriteTagToArray(
+      3,
+      ::google::protobuf::internal::WireFormatLite::WIRETYPE_LENGTH_DELIMITED,
+      target);
+    target = ::google::protobuf::io::CodedOutputStream::WriteVarint32ToArray(
+      _sendtoids_cached_byte_size_, target);
+  }
   for (int i = 0; i < this->sendtoids_size(); i++) {
     target = ::google::protobuf::internal::WireFormatLite::
-      WriteUInt32ToArray(3, this->sendtoids(i), target);
+      WriteUInt32NoTagToArray(this->sendtoids(i), target);
   }
 
-  if (_internal_metadata_.have_unknown_fields()) {
-    target = ::google::protobuf::internal::WireFormat::SerializeUnknownFieldsToArray(
-        unknown_fields(), target);
+  // optional uint32 dataSize = 4;
+  if (this->datasize() != 0) {
+    target = ::google::protobuf::internal::WireFormatLite::WriteUInt32ToArray(4, this->datasize(), target);
   }
+
   // @@protoc_insertion_point(serialize_to_array_end:ProtobufPackets.PackHeaderIn)
   return target;
 }
@@ -365,20 +402,25 @@ void PackHeaderIn::SerializeWithCachedSizes(
 int PackHeaderIn::ByteSize() const {
   int total_size = 0;
 
-  if (_has_bits_[0 / 32] & 3u) {
-    // optional bool serverRead = 1;
-    if (has_serverread()) {
-      total_size += 1 + 1;
-    }
-
-    // optional string locKey = 2;
-    if (has_lockey()) {
-      total_size += 1 +
-        ::google::protobuf::internal::WireFormatLite::StringSize(
-          this->lockey());
-    }
-
+  // optional bool serverRead = 1;
+  if (this->serverread() != 0) {
+    total_size += 1 + 1;
   }
+
+  // optional string locKey = 2;
+  if (this->lockey().size() > 0) {
+    total_size += 1 +
+      ::google::protobuf::internal::WireFormatLite::StringSize(
+        this->lockey());
+  }
+
+  // optional uint32 dataSize = 4;
+  if (this->datasize() != 0) {
+    total_size += 1 +
+      ::google::protobuf::internal::WireFormatLite::UInt32Size(
+        this->datasize());
+  }
+
   // repeated uint32 sendToIDs = 3;
   {
     int data_size = 0;
@@ -386,14 +428,16 @@ int PackHeaderIn::ByteSize() const {
       data_size += ::google::protobuf::internal::WireFormatLite::
         UInt32Size(this->sendtoids(i));
     }
-    total_size += 1 * this->sendtoids_size() + data_size;
+    if (data_size > 0) {
+      total_size += 1 +
+        ::google::protobuf::internal::WireFormatLite::Int32Size(data_size);
+    }
+    GOOGLE_SAFE_CONCURRENT_WRITES_BEGIN();
+    _sendtoids_cached_byte_size_ = data_size;
+    GOOGLE_SAFE_CONCURRENT_WRITES_END();
+    total_size += data_size;
   }
 
-  if (_internal_metadata_.have_unknown_fields()) {
-    total_size +=
-      ::google::protobuf::internal::WireFormat::ComputeUnknownFieldsSize(
-        unknown_fields());
-  }
   GOOGLE_SAFE_CONCURRENT_WRITES_BEGIN();
   _cached_size_ = total_size;
   GOOGLE_SAFE_CONCURRENT_WRITES_END();
@@ -415,17 +459,15 @@ void PackHeaderIn::MergeFrom(const ::google::protobuf::Message& from) {
 void PackHeaderIn::MergeFrom(const PackHeaderIn& from) {
   if (GOOGLE_PREDICT_FALSE(&from == this)) MergeFromFail(__LINE__);
   sendtoids_.MergeFrom(from.sendtoids_);
-  if (from._has_bits_[0 / 32] & (0xffu << (0 % 32))) {
-    if (from.has_serverread()) {
-      set_serverread(from.serverread());
-    }
-    if (from.has_lockey()) {
-      set_has_lockey();
-      lockey_.AssignWithDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), from.lockey_);
-    }
+  if (from.serverread() != 0) {
+    set_serverread(from.serverread());
   }
-  if (from._internal_metadata_.have_unknown_fields()) {
-    mutable_unknown_fields()->MergeFrom(from.unknown_fields());
+  if (from.lockey().size() > 0) {
+
+    lockey_.AssignWithDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), from.lockey_);
+  }
+  if (from.datasize() != 0) {
+    set_datasize(from.datasize());
   }
 }
 
@@ -454,7 +496,7 @@ void PackHeaderIn::InternalSwap(PackHeaderIn* other) {
   std::swap(serverread_, other->serverread_);
   lockey_.Swap(&other->lockey_);
   sendtoids_.UnsafeArenaSwap(&other->sendtoids_);
-  std::swap(_has_bits_[0], other->_has_bits_[0]);
+  std::swap(datasize_, other->datasize_);
   _internal_metadata_.Swap(&other->_internal_metadata_);
   std::swap(_cached_size_, other->_cached_size_);
 }
@@ -471,77 +513,57 @@ void PackHeaderIn::InternalSwap(PackHeaderIn* other) {
 // PackHeaderIn
 
 // optional bool serverRead = 1;
-bool PackHeaderIn::has_serverread() const {
-  return (_has_bits_[0] & 0x00000001u) != 0;
-}
-void PackHeaderIn::set_has_serverread() {
-  _has_bits_[0] |= 0x00000001u;
-}
-void PackHeaderIn::clear_has_serverread() {
-  _has_bits_[0] &= ~0x00000001u;
-}
 void PackHeaderIn::clear_serverread() {
   serverread_ = false;
-  clear_has_serverread();
 }
  bool PackHeaderIn::serverread() const {
   // @@protoc_insertion_point(field_get:ProtobufPackets.PackHeaderIn.serverRead)
   return serverread_;
 }
  void PackHeaderIn::set_serverread(bool value) {
-  set_has_serverread();
+  
   serverread_ = value;
   // @@protoc_insertion_point(field_set:ProtobufPackets.PackHeaderIn.serverRead)
 }
 
 // optional string locKey = 2;
-bool PackHeaderIn::has_lockey() const {
-  return (_has_bits_[0] & 0x00000002u) != 0;
-}
-void PackHeaderIn::set_has_lockey() {
-  _has_bits_[0] |= 0x00000002u;
-}
-void PackHeaderIn::clear_has_lockey() {
-  _has_bits_[0] &= ~0x00000002u;
-}
 void PackHeaderIn::clear_lockey() {
   lockey_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-  clear_has_lockey();
 }
  const ::std::string& PackHeaderIn::lockey() const {
   // @@protoc_insertion_point(field_get:ProtobufPackets.PackHeaderIn.locKey)
   return lockey_.GetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
 }
  void PackHeaderIn::set_lockey(const ::std::string& value) {
-  set_has_lockey();
+  
   lockey_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), value);
   // @@protoc_insertion_point(field_set:ProtobufPackets.PackHeaderIn.locKey)
 }
  void PackHeaderIn::set_lockey(const char* value) {
-  set_has_lockey();
+  
   lockey_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::string(value));
   // @@protoc_insertion_point(field_set_char:ProtobufPackets.PackHeaderIn.locKey)
 }
  void PackHeaderIn::set_lockey(const char* value, size_t size) {
-  set_has_lockey();
+  
   lockey_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(),
       ::std::string(reinterpret_cast<const char*>(value), size));
   // @@protoc_insertion_point(field_set_pointer:ProtobufPackets.PackHeaderIn.locKey)
 }
  ::std::string* PackHeaderIn::mutable_lockey() {
-  set_has_lockey();
+  
   // @@protoc_insertion_point(field_mutable:ProtobufPackets.PackHeaderIn.locKey)
   return lockey_.MutableNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
 }
  ::std::string* PackHeaderIn::release_lockey() {
-  clear_has_lockey();
+  
   return lockey_.ReleaseNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
 }
  void PackHeaderIn::set_allocated_lockey(::std::string* lockey) {
   if (lockey != NULL) {
-    set_has_lockey();
+    
   } else {
-    clear_has_lockey();
+    
   }
   lockey_.SetAllocatedNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), lockey);
   // @@protoc_insertion_point(field_set_allocated:ProtobufPackets.PackHeaderIn.locKey)
@@ -577,6 +599,20 @@ PackHeaderIn::mutable_sendtoids() {
   return &sendtoids_;
 }
 
+// optional uint32 dataSize = 4;
+void PackHeaderIn::clear_datasize() {
+  datasize_ = 0u;
+}
+ ::google::protobuf::uint32 PackHeaderIn::datasize() const {
+  // @@protoc_insertion_point(field_get:ProtobufPackets.PackHeaderIn.dataSize)
+  return datasize_;
+}
+ void PackHeaderIn::set_datasize(::google::protobuf::uint32 value) {
+  
+  datasize_ = value;
+  // @@protoc_insertion_point(field_set:ProtobufPackets.PackHeaderIn.dataSize)
+}
+
 #endif  // PROTOBUF_INLINE_NOT_IN_HEADERS
 
 // ===================================================================
@@ -584,6 +620,7 @@ PackHeaderIn::mutable_sendtoids() {
 #if !defined(_MSC_VER) || _MSC_VER >= 1900
 const int PackHeaderOut::kLocKeyFieldNumber;
 const int PackHeaderOut::kSentFromIDFieldNumber;
+const int PackHeaderOut::kDataSizeFieldNumber;
 #endif  // !defined(_MSC_VER) || _MSC_VER >= 1900
 
 PackHeaderOut::PackHeaderOut()
@@ -593,6 +630,7 @@ PackHeaderOut::PackHeaderOut()
 }
 
 void PackHeaderOut::InitAsDefaultInstance() {
+  _is_default_instance_ = true;
 }
 
 PackHeaderOut::PackHeaderOut(const PackHeaderOut& from)
@@ -604,11 +642,12 @@ PackHeaderOut::PackHeaderOut(const PackHeaderOut& from)
 }
 
 void PackHeaderOut::SharedCtor() {
+    _is_default_instance_ = false;
   ::google::protobuf::internal::GetEmptyString();
   _cached_size_ = 0;
   lockey_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
   sentfromid_ = 0u;
-  ::memset(_has_bits_, 0, sizeof(_has_bits_));
+  datasize_ = 0u;
 }
 
 PackHeaderOut::~PackHeaderOut() {
@@ -648,16 +687,20 @@ PackHeaderOut* PackHeaderOut::New(::google::protobuf::Arena* arena) const {
 }
 
 void PackHeaderOut::Clear() {
-  if (_has_bits_[0 / 32] & 3u) {
-    if (has_lockey()) {
-      lockey_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-    }
-    sentfromid_ = 0u;
-  }
-  ::memset(_has_bits_, 0, sizeof(_has_bits_));
-  if (_internal_metadata_.have_unknown_fields()) {
-    mutable_unknown_fields()->Clear();
-  }
+#define ZR_HELPER_(f) reinterpret_cast<char*>(\
+  &reinterpret_cast<PackHeaderOut*>(16)->f)
+
+#define ZR_(first, last) do {\
+  ::memset(&first, 0,\
+           ZR_HELPER_(last) - ZR_HELPER_(first) + sizeof(last));\
+} while (0)
+
+  ZR_(sentfromid_, datasize_);
+  lockey_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+
+#undef ZR_HELPER_
+#undef ZR_
+
 }
 
 bool PackHeaderOut::MergePartialFromCodedStream(
@@ -675,10 +718,10 @@ bool PackHeaderOut::MergePartialFromCodedStream(
         if (tag == 10) {
           DO_(::google::protobuf::internal::WireFormatLite::ReadString(
                 input, this->mutable_lockey()));
-          ::google::protobuf::internal::WireFormat::VerifyUTF8StringNamedField(
+          DO_(::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
             this->lockey().data(), this->lockey().length(),
-            ::google::protobuf::internal::WireFormat::PARSE,
-            "ProtobufPackets.PackHeaderOut.locKey");
+            ::google::protobuf::internal::WireFormatLite::PARSE,
+            "ProtobufPackets.PackHeaderOut.locKey"));
         } else {
           goto handle_unusual;
         }
@@ -693,7 +736,22 @@ bool PackHeaderOut::MergePartialFromCodedStream(
           DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
                    ::google::protobuf::uint32, ::google::protobuf::internal::WireFormatLite::TYPE_UINT32>(
                  input, &sentfromid_)));
-          set_has_sentfromid();
+
+        } else {
+          goto handle_unusual;
+        }
+        if (input->ExpectTag(24)) goto parse_dataSize;
+        break;
+      }
+
+      // optional uint32 dataSize = 3;
+      case 3: {
+        if (tag == 24) {
+         parse_dataSize:
+          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
+                   ::google::protobuf::uint32, ::google::protobuf::internal::WireFormatLite::TYPE_UINT32>(
+                 input, &datasize_)));
+
         } else {
           goto handle_unusual;
         }
@@ -708,8 +766,7 @@ bool PackHeaderOut::MergePartialFromCodedStream(
             ::google::protobuf::internal::WireFormatLite::WIRETYPE_END_GROUP) {
           goto success;
         }
-        DO_(::google::protobuf::internal::WireFormat::SkipField(
-              input, tag, mutable_unknown_fields()));
+        DO_(::google::protobuf::internal::WireFormatLite::SkipField(input, tag));
         break;
       }
     }
@@ -727,24 +784,25 @@ void PackHeaderOut::SerializeWithCachedSizes(
     ::google::protobuf::io::CodedOutputStream* output) const {
   // @@protoc_insertion_point(serialize_start:ProtobufPackets.PackHeaderOut)
   // optional string locKey = 1;
-  if (has_lockey()) {
-    ::google::protobuf::internal::WireFormat::VerifyUTF8StringNamedField(
+  if (this->lockey().size() > 0) {
+    ::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
       this->lockey().data(), this->lockey().length(),
-      ::google::protobuf::internal::WireFormat::SERIALIZE,
+      ::google::protobuf::internal::WireFormatLite::SERIALIZE,
       "ProtobufPackets.PackHeaderOut.locKey");
     ::google::protobuf::internal::WireFormatLite::WriteStringMaybeAliased(
       1, this->lockey(), output);
   }
 
   // optional uint32 sentFromID = 2;
-  if (has_sentfromid()) {
+  if (this->sentfromid() != 0) {
     ::google::protobuf::internal::WireFormatLite::WriteUInt32(2, this->sentfromid(), output);
   }
 
-  if (_internal_metadata_.have_unknown_fields()) {
-    ::google::protobuf::internal::WireFormat::SerializeUnknownFields(
-        unknown_fields(), output);
+  // optional uint32 dataSize = 3;
+  if (this->datasize() != 0) {
+    ::google::protobuf::internal::WireFormatLite::WriteUInt32(3, this->datasize(), output);
   }
+
   // @@protoc_insertion_point(serialize_end:ProtobufPackets.PackHeaderOut)
 }
 
@@ -752,10 +810,10 @@ void PackHeaderOut::SerializeWithCachedSizes(
     ::google::protobuf::uint8* target) const {
   // @@protoc_insertion_point(serialize_to_array_start:ProtobufPackets.PackHeaderOut)
   // optional string locKey = 1;
-  if (has_lockey()) {
-    ::google::protobuf::internal::WireFormat::VerifyUTF8StringNamedField(
+  if (this->lockey().size() > 0) {
+    ::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
       this->lockey().data(), this->lockey().length(),
-      ::google::protobuf::internal::WireFormat::SERIALIZE,
+      ::google::protobuf::internal::WireFormatLite::SERIALIZE,
       "ProtobufPackets.PackHeaderOut.locKey");
     target =
       ::google::protobuf::internal::WireFormatLite::WriteStringToArray(
@@ -763,14 +821,15 @@ void PackHeaderOut::SerializeWithCachedSizes(
   }
 
   // optional uint32 sentFromID = 2;
-  if (has_sentfromid()) {
+  if (this->sentfromid() != 0) {
     target = ::google::protobuf::internal::WireFormatLite::WriteUInt32ToArray(2, this->sentfromid(), target);
   }
 
-  if (_internal_metadata_.have_unknown_fields()) {
-    target = ::google::protobuf::internal::WireFormat::SerializeUnknownFieldsToArray(
-        unknown_fields(), target);
+  // optional uint32 dataSize = 3;
+  if (this->datasize() != 0) {
+    target = ::google::protobuf::internal::WireFormatLite::WriteUInt32ToArray(3, this->datasize(), target);
   }
+
   // @@protoc_insertion_point(serialize_to_array_end:ProtobufPackets.PackHeaderOut)
   return target;
 }
@@ -778,27 +837,27 @@ void PackHeaderOut::SerializeWithCachedSizes(
 int PackHeaderOut::ByteSize() const {
   int total_size = 0;
 
-  if (_has_bits_[0 / 32] & 3u) {
-    // optional string locKey = 1;
-    if (has_lockey()) {
-      total_size += 1 +
-        ::google::protobuf::internal::WireFormatLite::StringSize(
-          this->lockey());
-    }
-
-    // optional uint32 sentFromID = 2;
-    if (has_sentfromid()) {
-      total_size += 1 +
-        ::google::protobuf::internal::WireFormatLite::UInt32Size(
-          this->sentfromid());
-    }
-
+  // optional string locKey = 1;
+  if (this->lockey().size() > 0) {
+    total_size += 1 +
+      ::google::protobuf::internal::WireFormatLite::StringSize(
+        this->lockey());
   }
-  if (_internal_metadata_.have_unknown_fields()) {
-    total_size +=
-      ::google::protobuf::internal::WireFormat::ComputeUnknownFieldsSize(
-        unknown_fields());
+
+  // optional uint32 sentFromID = 2;
+  if (this->sentfromid() != 0) {
+    total_size += 1 +
+      ::google::protobuf::internal::WireFormatLite::UInt32Size(
+        this->sentfromid());
   }
+
+  // optional uint32 dataSize = 3;
+  if (this->datasize() != 0) {
+    total_size += 1 +
+      ::google::protobuf::internal::WireFormatLite::UInt32Size(
+        this->datasize());
+  }
+
   GOOGLE_SAFE_CONCURRENT_WRITES_BEGIN();
   _cached_size_ = total_size;
   GOOGLE_SAFE_CONCURRENT_WRITES_END();
@@ -819,17 +878,15 @@ void PackHeaderOut::MergeFrom(const ::google::protobuf::Message& from) {
 
 void PackHeaderOut::MergeFrom(const PackHeaderOut& from) {
   if (GOOGLE_PREDICT_FALSE(&from == this)) MergeFromFail(__LINE__);
-  if (from._has_bits_[0 / 32] & (0xffu << (0 % 32))) {
-    if (from.has_lockey()) {
-      set_has_lockey();
-      lockey_.AssignWithDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), from.lockey_);
-    }
-    if (from.has_sentfromid()) {
-      set_sentfromid(from.sentfromid());
-    }
+  if (from.lockey().size() > 0) {
+
+    lockey_.AssignWithDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), from.lockey_);
   }
-  if (from._internal_metadata_.have_unknown_fields()) {
-    mutable_unknown_fields()->MergeFrom(from.unknown_fields());
+  if (from.sentfromid() != 0) {
+    set_sentfromid(from.sentfromid());
+  }
+  if (from.datasize() != 0) {
+    set_datasize(from.datasize());
   }
 }
 
@@ -857,7 +914,7 @@ void PackHeaderOut::Swap(PackHeaderOut* other) {
 void PackHeaderOut::InternalSwap(PackHeaderOut* other) {
   lockey_.Swap(&other->lockey_);
   std::swap(sentfromid_, other->sentfromid_);
-  std::swap(_has_bits_[0], other->_has_bits_[0]);
+  std::swap(datasize_, other->datasize_);
   _internal_metadata_.Swap(&other->_internal_metadata_);
   std::swap(_cached_size_, other->_cached_size_);
 }
@@ -874,80 +931,74 @@ void PackHeaderOut::InternalSwap(PackHeaderOut* other) {
 // PackHeaderOut
 
 // optional string locKey = 1;
-bool PackHeaderOut::has_lockey() const {
-  return (_has_bits_[0] & 0x00000001u) != 0;
-}
-void PackHeaderOut::set_has_lockey() {
-  _has_bits_[0] |= 0x00000001u;
-}
-void PackHeaderOut::clear_has_lockey() {
-  _has_bits_[0] &= ~0x00000001u;
-}
 void PackHeaderOut::clear_lockey() {
   lockey_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-  clear_has_lockey();
 }
  const ::std::string& PackHeaderOut::lockey() const {
   // @@protoc_insertion_point(field_get:ProtobufPackets.PackHeaderOut.locKey)
   return lockey_.GetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
 }
  void PackHeaderOut::set_lockey(const ::std::string& value) {
-  set_has_lockey();
+  
   lockey_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), value);
   // @@protoc_insertion_point(field_set:ProtobufPackets.PackHeaderOut.locKey)
 }
  void PackHeaderOut::set_lockey(const char* value) {
-  set_has_lockey();
+  
   lockey_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::string(value));
   // @@protoc_insertion_point(field_set_char:ProtobufPackets.PackHeaderOut.locKey)
 }
  void PackHeaderOut::set_lockey(const char* value, size_t size) {
-  set_has_lockey();
+  
   lockey_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(),
       ::std::string(reinterpret_cast<const char*>(value), size));
   // @@protoc_insertion_point(field_set_pointer:ProtobufPackets.PackHeaderOut.locKey)
 }
  ::std::string* PackHeaderOut::mutable_lockey() {
-  set_has_lockey();
+  
   // @@protoc_insertion_point(field_mutable:ProtobufPackets.PackHeaderOut.locKey)
   return lockey_.MutableNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
 }
  ::std::string* PackHeaderOut::release_lockey() {
-  clear_has_lockey();
+  
   return lockey_.ReleaseNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
 }
  void PackHeaderOut::set_allocated_lockey(::std::string* lockey) {
   if (lockey != NULL) {
-    set_has_lockey();
+    
   } else {
-    clear_has_lockey();
+    
   }
   lockey_.SetAllocatedNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), lockey);
   // @@protoc_insertion_point(field_set_allocated:ProtobufPackets.PackHeaderOut.locKey)
 }
 
 // optional uint32 sentFromID = 2;
-bool PackHeaderOut::has_sentfromid() const {
-  return (_has_bits_[0] & 0x00000002u) != 0;
-}
-void PackHeaderOut::set_has_sentfromid() {
-  _has_bits_[0] |= 0x00000002u;
-}
-void PackHeaderOut::clear_has_sentfromid() {
-  _has_bits_[0] &= ~0x00000002u;
-}
 void PackHeaderOut::clear_sentfromid() {
   sentfromid_ = 0u;
-  clear_has_sentfromid();
 }
  ::google::protobuf::uint32 PackHeaderOut::sentfromid() const {
   // @@protoc_insertion_point(field_get:ProtobufPackets.PackHeaderOut.sentFromID)
   return sentfromid_;
 }
  void PackHeaderOut::set_sentfromid(::google::protobuf::uint32 value) {
-  set_has_sentfromid();
+  
   sentfromid_ = value;
   // @@protoc_insertion_point(field_set:ProtobufPackets.PackHeaderOut.sentFromID)
+}
+
+// optional uint32 dataSize = 3;
+void PackHeaderOut::clear_datasize() {
+  datasize_ = 0u;
+}
+ ::google::protobuf::uint32 PackHeaderOut::datasize() const {
+  // @@protoc_insertion_point(field_get:ProtobufPackets.PackHeaderOut.dataSize)
+  return datasize_;
+}
+ void PackHeaderOut::set_datasize(::google::protobuf::uint32 value) {
+  
+  datasize_ = value;
+  // @@protoc_insertion_point(field_set:ProtobufPackets.PackHeaderOut.dataSize)
 }
 
 #endif  // PROTOBUF_INLINE_NOT_IN_HEADERS

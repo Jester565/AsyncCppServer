@@ -17,6 +17,9 @@ public:
 	{
 		return udpManager;
 	}
+	virtual void destroyManagers() override;
+
+	virtual void shutdownIO() override;
 
 	virtual ~ServerCPP();
 

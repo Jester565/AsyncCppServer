@@ -1,12 +1,13 @@
 #include "UDPManager.h"
-#include <HeaderManager.h>
-#include <boost/asio/buffer.hpp>
-#include <boost/asio/placeholders.hpp>
+#include "HeaderManagerCPP.h"
+#include <boost/asio.hpp>
 #include <boost/bind.hpp>
 #include <ServicePool.h>
 #include <ClientManager.h>
 #include <Client.h>
 #include <Server.h>
+#include <PacketManager.h>
+#include <IPacket.h>
 #include <iostream>
 using namespace boost::asio::ip;
 
@@ -22,12 +23,13 @@ void UDPManager::detach(uint16_t port)
 	{
 		if (server->getIPVersion() == boost::asio::ip::tcp::v6())
 		{
-			socket = new udp::socket(server->getServicePool()->getNextIOService(), udp::endpoint(boost::asio::ip::udp::v6(), port));
+			socket = boost::make_shared<udp::socket>(server->getServicePool()->getNextIOService(), udp::endpoint(boost::asio::ip::udp::v6(), port));
 		}
 		else
 		{
-			socket = new udp::socket(server->getServicePool()->getNextIOService(), udp::endpoint(boost::asio::ip::udp::v4(), port));
+			socket = boost::make_shared<udp::socket>(server->getServicePool()->getNextIOService(), udp::endpoint(boost::asio::ip::udp::v4(), port));
 		}
+		read();
 	}
 	catch (boost::system::system_error sysError)
 	{
@@ -41,7 +43,16 @@ void UDPManager::read()
 	{
 		receiveData = new std::vector<unsigned char>(MAX_UDP_DATA_SIZE);
 	}
-	socket->async_receive_from(boost::asio::buffer(receiveData, MAX_UDP_DATA_SIZE), receiveEP, boost::bind(&UDPManager::asyncReceive, shared_from_this(), boost::asio::placeholders::error, boost::asio::placeholders::bytes_transferred));
+	socket->async_receive_from(boost::asio::buffer(*receiveData, MAX_UDP_DATA_SIZE), receiveEP, boost::bind(&UDPManager::asyncReceive, shared_from_this(), boost::asio::placeholders::error, boost::asio::placeholders::bytes_transferred));
+}
+
+void UDPManager::close()
+{
+		if (socket != nullptr)
+		{
+				socket->shutdown(boost::asio::ip::udp::socket::shutdown_both);
+				socket->close();
+		}
 }
 
 void UDPManager::asyncReceive(const boost::system::error_code& error, unsigned int nBytes)
@@ -50,94 +61,167 @@ void UDPManager::asyncReceive(const boost::system::error_code& error, unsigned i
 	{
 		if (error == boost::asio::error::connection_reset)
 		{
-			std::cout << "Connection Closed" << std::endl;
-			Client* sender = server->getClientManager()->getClient(receiveEP.address().to_string(), receiveEP.port());
-			if (sender != nullptr)
-			{
+				std::cout << "Connection Closed" << std::endl;
+				Client* sender = server->getClientManager()->getClient(receiveEP.address().to_string(), receiveEP.port());
+				if (sender != nullptr)
+				{
 				server->getClientManager()->removeClient(sender->getID());
-			}
-			else
-			{
+				}
+				else
+				{
 				std::cerr << "Could not find the address of client when closing connection" << std::endl;
-			}
-			return;
+				}
+				return;
 		}
 		std::cerr << "Error occured in UDP Reading: " << error << " - " << error.message() << std::endl;
 		switch (errorMode)
 		{
 		case THROW_ON_ERROR:
-			throw error;
-			break;
+				throw error;
+				break;
 		case RETURN_ON_ERROR:
-			return;
+				return;
 		case RECALL_ON_ERROR:
-			read();
-			return;
+				read();
+				return;
 		};
-	}
-	Client* sender = server->getClientManager()->getClient(receiveEP.address().to_string(), receiveEP.port());
-	if (sender != nullptr)
+		return;
+		}
+	int bytesProcessed = 0;
+	while (bytesProcessed < nBytes)
 	{
-		hm->decryptHeader(receiveData, nBytes, sender->getID());
-	}
-	else
-	{
-		std::cerr << "Could not match IP of sender with client" << std::endl;
+		Client* sender = server->getClientManager()->getClient(receiveEP.address().to_string(), receiveEP.port());
+		if (sender != nullptr)
+		{
+			if (bytesProcessed + HeaderManagerCPP::HSI_IN_SIZE > nBytes)
+			{
+				std::cerr << "Bytes processed exceeded nBytes" << std::endl;
+				break;
+			}
+			uint16_t headerPackSize = ((HeaderManagerCPP*)hm)->getHSI(receiveData->data() + bytesProcessed);
+			bytesProcessed += HeaderManagerCPP::HSI_IN_SIZE;
+			if (bytesProcessed + headerPackSize > nBytes)
+			{
+				std::cerr << "Bytes processed exceeded nBytes" << std::endl;
+				break;
+			}
+			boost::shared_ptr<IPacket> iPack = hm->decryptHeader(receiveData->data() + bytesProcessed, headerPackSize, sender->getID());
+			bytesProcessed += headerPackSize;
+			uint32_t mainDataSize = iPack->getDataSize();
+			if (bytesProcessed + mainDataSize > nBytes)
+			{
+				std::cerr << "Bytes processed exceeded nBytes" << std::endl;
+				break;
+			}
+			if (mainDataSize > 0)
+			{
+				iPack->setData(receiveData->begin() + bytesProcessed, receiveData->begin() + bytesProcessed + mainDataSize);
+			}
+			else
+			{
+				std::vector <unsigned char> mainData;
+				iPack->setData(mainData.begin(), mainData.end());
+			}
+			bytesProcessed += mainDataSize;
+			server->getPacketManager()->process(iPack);
+		}
+		else
+		{
+			std::cerr << "Could not match IP of sender with client" << std::endl;
+			break;
+		}
 	}
 	read();
 }
 
 void UDPManager::send(const udp::endpoint* remoteEP, boost::shared_ptr<std::vector<unsigned char>> sendData)
 {
-	socket->async_send_to(boost::asio::buffer(*sendData, sendData->size()), *remoteEP, boost::bind(&UDPManager::asyncSend, shared_from_this(), boost::asio::placeholders::error, sendData));
+	if (sendData->size() > MAX_UDP_DATA_SIZE)
+	{
+		std::cerr << "The size of send data was greater than the MAX_UDP_DATA_SIZE" << std::endl;
+		throw  std::invalid_argument("Size of sendData exceeded the MAX_UDP_DATA_SIZE");
+	}
+	sendingMutex.lock();
+	if (!sending)
+	{
+		sending = true;
+		sendingMutex.unlock();
+		socket->async_send_to(boost::asio::buffer(*sendData, sendData->size()), *remoteEP, boost::bind(&UDPManager::asyncSend, shared_from_this(), boost::asio::placeholders::error, sendData));
+	}
+	else
+	{
+		queueSendDataMutex.lock();
+		sendingMutex.unlock();
+		queueSendData.push(std::make_pair(remoteEP, sendData));
+		queueSendDataMutex.unlock();
+	}
 }
 
 void UDPManager::send(const udp::endpoint* remoteEP, boost::shared_ptr<OPacket> oPack)
 {
-	std::cout << "UDPRemoteEP: " << remoteEP->address().to_string() << " : " << remoteEP->port() << " : " << remoteEP->address().is_v6() << std::endl;
-	std::cout << "UDPLocalEP: " << socket->local_endpoint().address().to_string() << " : " << socket->local_endpoint().port() << " : " << socket->local_endpoint().address().is_v6() << std::endl;
 	boost::shared_ptr<std::vector<unsigned char>> sendData = hm->encryptHeader(oPack);
-	socket->async_send_to(boost::asio::buffer(*sendData, sendData->size()), *remoteEP, boost::bind(&UDPManager::asyncSend, shared_from_this(), boost::asio::placeholders::error, sendData));
+	if (sendData->size() > MAX_UDP_DATA_SIZE)
+	{
+		std::cerr << "The size of send data was greater than the MAX_UDP_DATA_SIZE" << std::endl;
+		throw  std::invalid_argument("Size of sendData exceeded the MAX_UDP_DATA_SIZE");
+	}
+	sendingMutex.lock();
+	if (!sending)
+	{
+		sending = true;
+		sendingMutex.unlock();
+		socket->async_send_to(boost::asio::buffer(*sendData, sendData->size()), *remoteEP, boost::bind(&UDPManager::asyncSend, shared_from_this(), boost::asio::placeholders::error, sendData));
+	}
+	else
+	{
+		queueSendDataMutex.lock();
+		sendingMutex.unlock();
+		queueSendData.push(std::make_pair(remoteEP, sendData));
+		queueSendDataMutex.unlock();
+	}
 }
 
 void UDPManager::asyncSend(const boost::system::error_code& error, boost::shared_ptr<std::vector<unsigned char>> sendData)
 {
-	if (error)
-	{
-		std::cerr << "Error occured in UDP Sending: " << error.message() << std::endl;
-		switch (errorMode)
+		sendingMutex.lock();
+		sending = false;
+		sendingMutex.unlock();
+		if (error)
 		{
-		case THROW_ON_ERROR:
-			throw error;
-			break;
-		case RETURN_ON_ERROR:
-			return;
-			break;
-		case RECALL_ON_ERROR:
-			return;
-		};
-	}
+				std::cerr << "Error occured in UDP Sending: " << error.message() << std::endl;
+				switch (errorMode)
+				{
+				case THROW_ON_ERROR:
+						throw error;
+						break;
+				case RETURN_ON_ERROR:
+						return;
+						break;
+				case RECALL_ON_ERROR:
+						return;
+				};
+		}
+		queueSendDataMutex.lock();
+		while (!queueSendData.empty())
+		{
+				std::cout << "Queue used" << std::endl;
+				boost::shared_ptr<std::vector <unsigned char>> sendData = queueSendData.front().second;
+				const udp::endpoint* remoteEP = queueSendData.front().first;
+				queueSendData.pop();
+				socket->send_to(boost::asio::buffer(*sendData, sendData->size()), *remoteEP);
+		}
+		queueSendDataMutex.unlock();
 }
 
 UDPManager::~UDPManager()
 {
-	delete hm;
-	hm = nullptr;
-	if (socket != nullptr)
-	{
-		boost::system::error_code ec;
-		socket->shutdown(boost::asio::ip::udp::socket::shutdown_both, ec);
-		if (ec)
-		{
-			std::cerr << "Error when closing UDP Socket: " << ec.message() << std::endl;
+		if (hm != nullptr) {
+				delete hm;
+				hm = nullptr;
 		}
-		socket->close();
-		delete socket;
-		socket = nullptr;
-	}
-	if (receiveData != nullptr)
-	{
-		delete receiveData;
-		receiveData = nullptr;
-	}
+		if (receiveData != nullptr)
+		{
+				delete receiveData;
+				receiveData = nullptr;
+		}
 }

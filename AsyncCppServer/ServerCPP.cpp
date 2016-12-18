@@ -38,7 +38,19 @@ Client* ServerCPP::createClient(boost::shared_ptr<TCPConnection> tcpConnection, 
 	return new ClientCPP(tcpConnection, this, id);
 }
 
+void ServerCPP::destroyManagers() {
+		udpManager = nullptr;
+}
+
+void ServerCPP::shutdownIO()
+{
+		Server::shutdownIO();
+		if (udpManager != nullptr) {
+				udpManager->close();
+		}
+}
+
 ServerCPP::~ServerCPP()
 {
-
+		
 }
