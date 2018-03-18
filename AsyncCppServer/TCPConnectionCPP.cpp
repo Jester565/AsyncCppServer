@@ -58,25 +58,25 @@ void TCPConnectionCPP::asyncReceiveHandlerCPP(const boost::system::error_code& e
 		};
 		return;
 	}
-	uint16_t headerPackSize = ((HeaderManagerCPP*)hm)->getHSI(receiveStorage->data());
-	std::vector <unsigned char> headerPackData(headerPackSize);
-	socket->read_some(boost::asio::buffer(headerPackData, headerPackSize));
-	boost::shared_ptr<IPacket> iPack = hm->decryptHeader(headerPackData.data(), headerPackSize, cID);
-	uint32_t mainDataSize = iPack->getDataSize();
-	if (mainDataSize > 0)
-	{
-		std::vector <unsigned char> mainData(mainDataSize);
-		socket->read_some(boost::asio::buffer(mainData, mainDataSize));
-		iPack->setData(mainData.begin(), mainData.end());
-	}
-	else
-	{
-		std::vector <unsigned char> mainData;
-		iPack->setData(mainData.begin(), mainData.end());
-	}
-	if (iPack != nullptr)
-	{
-		server->getPacketManager()->process(iPack);
-	}
+		uint16_t headerPackSize = ((HeaderManagerCPP*)hm)->getHSI(receiveStorage->data());
+		std::vector <unsigned char> headerPackData(headerPackSize);
+		socket->read_some(boost::asio::buffer(headerPackData, headerPackSize));
+		boost::shared_ptr<IPacket> iPack = hm->decryptHeader(headerPackData.data(), headerPackSize, cID);
+		uint32_t mainDataSize = iPack->getDataSize();
+		if (mainDataSize > 0)
+		{
+				std::vector <unsigned char> mainData(mainDataSize);
+				socket->read_some(boost::asio::buffer(mainData, mainDataSize));
+				iPack->setData(mainData.begin(), mainData.end());
+		}
+		else
+		{
+				std::vector <unsigned char> mainData;
+				iPack->setData(mainData.begin(), mainData.end());
+		}
+		if (iPack != nullptr)
+		{
+				server->getPacketManager()->process(iPack);
+		}
 	read(); 
 }

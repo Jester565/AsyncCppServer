@@ -72,7 +72,12 @@ boost::shared_ptr<IPacket> HeaderManagerCPP::decryptHeaderAsBigEndian(unsigned c
 	std::vector<IDType> sendToIDs(phIn.sendtoids().begin(), phIn.sendtoids().end());
 	uint32_t mainDataSize = phIn.datasize();
 	//boost::shared_ptr<std::string> mainPackDataStr = boost::make_shared<std::string>(mainDataSize);
-	setIPack(iPack, const_cast<char*>(phIn.lockey().c_str()), cID, sendToIDs, nullptr, phIn.serverread());
+	char locKeyCpy[3];
+	for (int i = 0; i < 2; i++) {
+			locKeyCpy[i] = phIn.lockey().at(i);
+	}
+	locKeyCpy[2] = '\0';
+	setIPack(iPack, locKeyCpy, cID, sendToIDs, nullptr, phIn.serverread());
 	iPack->setDataSize(mainDataSize);
 	return iPack;
 }

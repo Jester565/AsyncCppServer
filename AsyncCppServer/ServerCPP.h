@@ -10,6 +10,7 @@ public:
 
 	virtual void createManagers() override;
 	virtual void run(uint16_t port) override;
+	virtual void run(uint16_t tcpPort, uint16_t udpPort);
 
 	virtual HeaderManager* createHeaderManager() override;
 	virtual Client* createClient(boost::shared_ptr<TCPConnection> tcpConnection, IDType id) override;

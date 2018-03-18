@@ -33,6 +33,15 @@ void ServerCPP::run(uint16_t port)
 	servicePool->run();
 }
 
+void ServerCPP::run(uint16_t tcpPort, uint16_t udpPort)
+{
+		tcpAcceptor = boost::make_shared<TCPAcceptorCPP>(this);
+		tcpAcceptor->detach(tcpPort);
+		udpManager = boost::make_shared<UDPManager>(this);
+		udpManager->detach(udpPort);
+		servicePool->run();
+}
+
 Client* ServerCPP::createClient(boost::shared_ptr<TCPConnection> tcpConnection, IDType id)
 {
 	return new ClientCPP(tcpConnection, this, id);
