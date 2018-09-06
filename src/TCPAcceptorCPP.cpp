@@ -1,11 +1,11 @@
 #include "TCPAcceptorCPP.h"
 #include "TCPConnectionCPP.h"
-#include <Server.h>
+#include "ServerCPP.h"
 #include <ClientManager.h>
 #include <boost/make_shared.hpp>
 #include <iostream>
 
-TCPAcceptorCPP::TCPAcceptorCPP(Server* server)
+TCPAcceptorCPP::TCPAcceptorCPP(ServerCPP* server)
 	:TCPAcceptor(server)
 {
 }
@@ -16,20 +16,8 @@ void TCPAcceptorCPP::asyncAcceptHandler(const boost::system::error_code& error)
 	if (error)
 	{
 		std::cerr << "Error occured in TCPAcceptor: " << error.message() << std::endl;
-		switch (errorMode)
-		{
-		case THROW_ON_ERROR:
-			throw error;
-			break;
-		case RETURN_ON_ERROR:
-			return;
-			break;
-		case RECALL_ON_ERROR:
-			runAccept();
-			return;
-		};
 	}
-	boost::shared_ptr<TCPConnection> tcpConnection = boost::make_shared<TCPConnectionCPP>(server, tempSocket);
+	boost::shared_ptr<TCPConnection> tcpConnection = boost::make_shared<TCPConnectionCPP>((ServerCPP*)server, tempSocket);
 	tcpConnection->start();
 	server->getClientManager()->addClient(tcpConnection);
 	runAccept();

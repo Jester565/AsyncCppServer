@@ -1,18 +1,18 @@
 #include "UDPManager.h"
 #include "HeaderManagerCPP.h"
+#include "ServerCPP.h"
 #include <boost/asio.hpp>
 #include <boost/bind.hpp>
 #include <ServicePool.h>
 #include <ClientManager.h>
 #include <Client.h>
-#include <Server.h>
 #include <PacketManager.h>
 #include <IPacket.h>
 #include <iostream>
 using namespace boost::asio::ip;
 
-UDPManager::UDPManager(Server* server)
-	:server(server), errorMode(DEFAULT_ERROR_MODE), socket(nullptr), receiveData(nullptr)
+UDPManager::UDPManager(ServerCPP* server)
+	:server(server), socket(nullptr), receiveData(nullptr)
 {
 	hm = server->createHeaderManager();
 }
@@ -62,7 +62,7 @@ void UDPManager::asyncReceive(const boost::system::error_code& error, unsigned i
 		if (error == boost::asio::error::connection_reset)
 		{
 				std::cout << "Connection Closed" << std::endl;
-				Client* sender = server->getClientManager()->getClient(receiveEP.address().to_string(), receiveEP.port());
+				ClientPtr sender = server->getClientManager()->getClient(receiveEP.address().to_string(), receiveEP.port());
 				if (sender != nullptr)
 				{
 				server->getClientManager()->removeClient(sender->getID());
@@ -74,23 +74,12 @@ void UDPManager::asyncReceive(const boost::system::error_code& error, unsigned i
 				return;
 		}
 		std::cerr << "Error occured in UDP Reading: " << error << " - " << error.message() << std::endl;
-		switch (errorMode)
-		{
-		case THROW_ON_ERROR:
-				throw error;
-				break;
-		case RETURN_ON_ERROR:
-				return;
-		case RECALL_ON_ERROR:
-				read();
-				return;
-		};
 		return;
-		}
+	}
 	int bytesProcessed = 0;
 	while (bytesProcessed < nBytes)
 	{
-		Client* sender = server->getClientManager()->getClient(receiveEP.address().to_string(), receiveEP.port());
+		ClientPtr sender = server->getClientManager()->getClient(receiveEP.address().to_string(), receiveEP.port());
 		if (sender != nullptr)
 		{
 			if (bytesProcessed + HeaderManagerCPP::HSI_IN_SIZE > nBytes)
@@ -105,7 +94,7 @@ void UDPManager::asyncReceive(const boost::system::error_code& error, unsigned i
 				std::cerr << "Bytes processed exceeded nBytes" << std::endl;
 				break;
 			}
-			boost::shared_ptr<IPacket> iPack = hm->decryptHeader(receiveData->data() + bytesProcessed, headerPackSize, sender->getID());
+			boost::shared_ptr<IPacket> iPack = hm->decryptHeader(receiveData->data() + bytesProcessed, headerPackSize, sender);
 			bytesProcessed += headerPackSize;
 			uint32_t mainDataSize = iPack->getDataSize();
 			if (bytesProcessed + mainDataSize > nBytes)
@@ -189,17 +178,6 @@ void UDPManager::asyncSend(const boost::system::error_code& error, boost::shared
 		if (error)
 		{
 				std::cerr << "Error occured in UDP Sending: " << error.message() << std::endl;
-				switch (errorMode)
-				{
-				case THROW_ON_ERROR:
-						throw error;
-						break;
-				case RETURN_ON_ERROR:
-						return;
-						break;
-				case RECALL_ON_ERROR:
-						return;
-				};
 		}
 		queueSendDataMutex.lock();
 		while (!queueSendData.empty())

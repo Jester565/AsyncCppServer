@@ -1,10 +1,12 @@
 #pragma once
 #include <TCPConnection.h>
 
+class ServerCPP;
+
 class TCPConnectionCPP : public TCPConnection
 {
 public:
-	TCPConnectionCPP(Server* server, boost::shared_ptr<boost::asio::ip::tcp::socket> boundSocket);
+	TCPConnectionCPP(ServerCPP* server, boost::shared_ptr<boost::asio::ip::tcp::socket> boundSocket);
 
 	virtual void read() override;
 

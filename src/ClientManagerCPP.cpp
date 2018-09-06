@@ -11,11 +11,11 @@ ClientManagerCPP::ClientManagerCPP(Server* server)
 {
 }
 
-Client* ClientManagerCPP::getClient(boost::asio::ip::udp::endpoint * remoteEP)
+ClientPtr ClientManagerCPP::getClient(boost::asio::ip::udp::endpoint * remoteEP)
 {
 	for (auto it = clients.begin(); it != clients.end(); it++)
 	{
-		if (((ClientCPP*)it->second)->getUDPRemoteEP() == remoteEP)
+		if (boost::static_pointer_cast<ClientCPP>(it->second)->getUDPRemoteEP() == remoteEP)
 		{
 			return it->second;
 		}
@@ -31,7 +31,7 @@ void ClientManagerCPP::sendUDP(boost::shared_ptr<OPacket> oPack)
 	}
 	for (int i = 0; i < oPack->getSendToIDs().size(); i++)
 	{
-		ClientCPP* sendToClient = (ClientCPP*)ClientManager::getClient(oPack->getSendToIDs().at(i));
+		auto sendToClient = boost::static_pointer_cast<ClientCPP>(ClientManager::getClient(oPack->getSendToIDs().at(i)));
 		((ServerCPP*)server)->getUDPManager()->send(sendToClient->getUDPRemoteEP(), oPack);
 	}
 }

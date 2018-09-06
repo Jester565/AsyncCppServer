@@ -15,7 +15,7 @@ ServerCPP::ServerCPP(const boost::asio::ip::tcp& ipVersion)
 void ServerCPP::createManagers()
 {
 	servicePool = new ServicePool();
-	pm = new PacketManager(this);
+	pm = boost::make_shared<PacketManager>(this);
 	cm = new ClientManagerCPP(this);
 }
 
@@ -42,9 +42,9 @@ void ServerCPP::run(uint16_t tcpPort, uint16_t udpPort)
 		servicePool->run();
 }
 
-Client* ServerCPP::createClient(boost::shared_ptr<TCPConnection> tcpConnection, IDType id)
+ClientPtr ServerCPP::createClient(boost::shared_ptr<TCPConnection> tcpConnection, IDType id)
 {
-	return new ClientCPP(tcpConnection, this, id);
+	return boost::make_shared<ClientCPP>(tcpConnection, this, id);
 }
 
 void ServerCPP::destroyManagers() {

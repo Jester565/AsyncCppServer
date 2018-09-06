@@ -19,8 +19,8 @@ protected:
 
 	virtual boost::shared_ptr<std::vector<unsigned char>> encryptHeaderToBigEndian(boost::shared_ptr<OPacket> pack) override;
 
-	virtual boost::shared_ptr<IPacket> decryptHeaderAsBigEndian(unsigned char* data, unsigned int size, IDType cID) override;
+	virtual boost::shared_ptr<IPacket> decryptHeaderAsBigEndian(unsigned char* data, unsigned int size, ClientPtr client) override;
 
-	virtual boost::shared_ptr<IPacket> decryptHeaderFromBigEndian(unsigned char* data, unsigned int size, IDType cID) override;
+	virtual boost::shared_ptr<IPacket> decryptHeaderFromBigEndian(unsigned char* data, unsigned int size, ClientPtr client) override;
 };
 

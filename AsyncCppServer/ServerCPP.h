@@ -1,6 +1,8 @@
 #pragma once
+#include <boost/shared_ptr.hpp>
 #include <Server.h>
 
+class PacketManager;
 class UDPManager;
 
 class ServerCPP : public Server
@@ -13,10 +15,13 @@ public:
 	virtual void run(uint16_t tcpPort, uint16_t udpPort);
 
 	virtual HeaderManager* createHeaderManager() override;
-	virtual Client* createClient(boost::shared_ptr<TCPConnection> tcpConnection, IDType id) override;
+	virtual ClientPtr createClient(boost::shared_ptr<TCPConnection> tcpConnection, IDType id) override;
 	virtual boost::shared_ptr<UDPManager> getUDPManager()
 	{
 		return udpManager;
+	}
+	virtual boost::shared_ptr<PacketManager> getPacketManager() {
+		return pm;
 	}
 	virtual void destroyManagers() override;
 
@@ -26,4 +31,6 @@ public:
 
 protected:
 	boost::shared_ptr<UDPManager> udpManager;
+
+	boost::shared_ptr<PacketManager> pm;
 };

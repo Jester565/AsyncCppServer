@@ -1,0 +1,16 @@
+syntax = "proto3";
+
+package ProtobufPackets;
+
+message PackHeaderOut {
+    string lockey = 1;
+    int32 sentfromid = 2;
+	uint32 datasize = 3;
+}
+
+message PackHeaderIn {
+    string lockey = 1;
+    bool serverRead = 2;
+    repeated int32 sendToIDs = 3;
+	uint32 datasize = 4;
+}

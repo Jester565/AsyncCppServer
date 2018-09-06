@@ -2,6 +2,7 @@
 #include "ServerCPP.h"
 #include "ClientManagerCPP.h"
 #include "HeaderManagerCPP.h"
+#include "Client.h"
 #include <IPacket.h>
 #include <PacketManager.h>
 #include <boost/bind.hpp>
@@ -9,7 +10,7 @@
 #include <iostream>
 
 
-TCPConnectionCPP::TCPConnectionCPP(Server* server, boost::shared_ptr<boost::asio::ip::tcp::socket> boundSocket)
+TCPConnectionCPP::TCPConnectionCPP(ServerCPP* server, boost::shared_ptr<boost::asio::ip::tcp::socket> boundSocket)
 	:TCPConnection(server, boundSocket)
 {
 
@@ -41,27 +42,16 @@ void TCPConnectionCPP::asyncReceiveHandlerCPP(const boost::system::error_code& e
 		if (error == boost::asio::error::connection_reset)
 		{
 			std::cout << "Connection Closed" << std::endl;
-			server->getClientManager()->removeClient(cID);
+			server->getClientManager()->removeClient(sender->getID());
 			return;
 		}
 		std::cerr << "Error occured in TCP Reading: " << error << " - " << error.message() << std::endl;
-		switch (errorMode)
-		{
-		case THROW_ON_ERROR:
-			throw error;
-			break;
-		case RETURN_ON_ERROR:
-			return;
-		case RECALL_ON_ERROR:
-			read();
-			return;
-		};
 		return;
 	}
 		uint16_t headerPackSize = ((HeaderManagerCPP*)hm)->getHSI(receiveStorage->data());
 		std::vector <unsigned char> headerPackData(headerPackSize);
 		socket->read_some(boost::asio::buffer(headerPackData, headerPackSize));
-		boost::shared_ptr<IPacket> iPack = hm->decryptHeader(headerPackData.data(), headerPackSize, cID);
+		boost::shared_ptr<IPacket> iPack = hm->decryptHeader(headerPackData.data(), headerPackSize, sender);
 		uint32_t mainDataSize = iPack->getDataSize();
 		if (mainDataSize > 0)
 		{
@@ -76,7 +66,7 @@ void TCPConnectionCPP::asyncReceiveHandlerCPP(const boost::system::error_code& e
 		}
 		if (iPack != nullptr)
 		{
-				server->getPacketManager()->process(iPack);
+				((ServerCPP*)server)->getPacketManager()->process(iPack);
 		}
 	read(); 
 }

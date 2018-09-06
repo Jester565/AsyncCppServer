@@ -8,14 +8,14 @@
 #include <vector>
 
 class OPacket;
-class Server;
+class ServerCPP;
 class HeaderManager;
 
 class UDPManager : public boost::enable_shared_from_this<UDPManager>
 {
 public:
 	static const unsigned int MAX_UDP_DATA_SIZE = 1024;
-	UDPManager(Server* server);
+	UDPManager(ServerCPP* server);
 
 	void detach(uint16_t port);
 	void send(const boost::asio::ip::udp::endpoint* remoteEP, boost::shared_ptr<std::vector<unsigned char>> sendData);
@@ -33,7 +33,7 @@ private:
 	boost::asio::ip::udp::endpoint receiveEP;
 	boost::shared_ptr<boost::asio::ip::udp::socket> socket;
 	HeaderManager* hm;
-	Server* server;
+	ServerCPP* server;
 	boost::mutex sendingMutex;
 	boost::mutex queueSendDataMutex;
 	bool sending;

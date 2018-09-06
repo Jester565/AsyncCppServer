@@ -1,5 +1,5 @@
 #include "HeaderManagerCPP.h"
-#include "Packets/PackFW.pb.h"
+#include "PackFW.pb.h"
 #include <boost/make_shared.hpp>
 #include <OPacket.h>
 #include <IPacket.h>
@@ -64,7 +64,7 @@ boost::shared_ptr<std::vector<unsigned char>> HeaderManagerCPP::encryptHeaderToB
 	return dataOut;
 }
 
-boost::shared_ptr<IPacket> HeaderManagerCPP::decryptHeaderAsBigEndian(unsigned char* data, unsigned int size, IDType cID)
+boost::shared_ptr<IPacket> HeaderManagerCPP::decryptHeaderAsBigEndian(unsigned char* data, unsigned int size, ClientPtr client)
 {
 	boost::shared_ptr<IPacket> iPack = boost::make_shared<IPacket>();
 	ProtobufPackets::PackHeaderIn phIn;
@@ -77,12 +77,12 @@ boost::shared_ptr<IPacket> HeaderManagerCPP::decryptHeaderAsBigEndian(unsigned c
 			locKeyCpy[i] = phIn.lockey().at(i);
 	}
 	locKeyCpy[2] = '\0';
-	setIPack(iPack, locKeyCpy, cID, sendToIDs, nullptr, phIn.serverread());
+	setIPack(iPack, locKeyCpy, client, sendToIDs, nullptr, phIn.serverread());
 	iPack->setDataSize(mainDataSize);
 	return iPack;
 }
 
-boost::shared_ptr<IPacket> HeaderManagerCPP::decryptHeaderFromBigEndian(unsigned char* data, unsigned int size, IDType cID)
+boost::shared_ptr<IPacket> HeaderManagerCPP::decryptHeaderFromBigEndian(unsigned char* data, unsigned int size, ClientPtr client)
 {
 	boost::shared_ptr<IPacket> iPack = boost::make_shared<IPacket>();
 	ProtobufPackets::PackHeaderIn phIn;
@@ -90,7 +90,7 @@ boost::shared_ptr<IPacket> HeaderManagerCPP::decryptHeaderFromBigEndian(unsigned
 	std::vector<IDType> sendToIDs(phIn.sendtoids().begin(), phIn.sendtoids().end());
 	uint32_t mainDataSize = phIn.datasize();
 	//boost::shared_ptr<std::string> mainPackDataStr = boost::make_shared<std::string>(data->begin() + HSI_IN_SIZE + headerPackSize, data->begin() + size);
-	setIPack(iPack, const_cast<char*>(phIn.lockey().c_str()), cID, sendToIDs, nullptr, phIn.serverread());
+	setIPack(iPack, const_cast<char*>(phIn.lockey().c_str()), client, sendToIDs, nullptr, phIn.serverread());
 	iPack->setDataSize(mainDataSize);
 	return iPack;
 }

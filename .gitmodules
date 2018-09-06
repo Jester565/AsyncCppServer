@@ -1,0 +1,3 @@
+[submodule "AsyncServerParent"]
+	path = AsyncServerParent
+	url = https://github.com/Jester565/AsyncServerParent.git
