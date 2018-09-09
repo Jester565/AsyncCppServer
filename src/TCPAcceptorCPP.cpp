@@ -5,8 +5,8 @@
 #include <boost/make_shared.hpp>
 #include <iostream>
 
-TCPAcceptorCPP::TCPAcceptorCPP(ServerCPP* server)
-	:TCPAcceptor(server)
+TCPAcceptorCPP::TCPAcceptorCPP(boost::shared_ptr<ServicePool> servicePool, boost::asio::ip::tcp& tcpVersion, ConnectionHandler handler)
+	:TCPAcceptor(servicePool, tcpVersion, handler)
 {
 }
 

@@ -6,8 +6,8 @@
 #include <OPacket.h>
 #include <iostream>
 
-ClientManagerCPP::ClientManagerCPP(Server* server)
-	:ClientManager(server)
+ClientManagerCPP::ClientManagerCPP(boost::shared_ptr<UDPManager> udpManager)
+	:udpManager(udpManager)
 {
 }
 
@@ -25,14 +25,22 @@ ClientPtr ClientManagerCPP::getClient(boost::asio::ip::udp::endpoint * remoteEP)
 
 void ClientManagerCPP::sendUDP(boost::shared_ptr<OPacket> oPack)
 {
-	if (((ServerCPP*)server)->getUDPManager() == nullptr)
-	{
-		return;
-	}
 	for (int i = 0; i < oPack->getSendToIDs().size(); i++)
 	{
 		auto sendToClient = boost::static_pointer_cast<ClientCPP>(ClientManager::getClient(oPack->getSendToIDs().at(i)));
-		((ServerCPP*)server)->getUDPManager()->send(sendToClient->getUDPRemoteEP(), oPack);
+		udpManager->send(sendToClient->getUDPRemoteEP(), oPack);
+	}
+}
+
+void ClientManagerCPP::sendToAllExceptUDP(boost::shared_ptr<OPacket> oPack, IDType excludeID)
+{
+	boost::shared_lock <boost::shared_mutex> lock(clientMapMutex);
+	for (auto iter = clients.begin(); iter != clients.end(); iter++)
+	{
+		if (iter->first != excludeID)
+		{
+			send(oPack, iter->second);
+		}
 	}
 }
 

@@ -32,7 +32,7 @@ private:
 	std::queue <std::pair <const boost::asio::ip::udp::endpoint*, boost::shared_ptr<std::vector <unsigned char>>>> queueSendData;
 	boost::asio::ip::udp::endpoint receiveEP;
 	boost::shared_ptr<boost::asio::ip::udp::socket> socket;
-	HeaderManager* hm;
+	boost::shared_ptr<HeaderManager> hm;
 	ServerCPP* server;
 	boost::mutex sendingMutex;
 	boost::mutex queueSendDataMutex;

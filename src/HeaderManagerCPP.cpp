@@ -4,10 +4,75 @@
 #include <OPacket.h>
 #include <IPacket.h>
 
-HeaderManagerCPP::HeaderManagerCPP(Server* server)
-	:HeaderManager(server)
+HeaderManagerCPP::HeaderManagerCPP(GenIPacketHandler handler)
+	:HeaderManager(handler, HSI_IN_SIZE), parseStage(0), activeIPack(nullptr)
 {
 
+}
+
+boost::shared_ptr<std::vector<unsigned char>> HeaderManagerCPP::serializePacket(boost::shared_ptr<OPacket> oPack)
+{
+	ProtobufPackets::PackHeaderOut phOut;
+	phOut.set_lockey(oPack->getLocKey());
+	phOut.set_sentfromid(oPack->getSenderID());
+	phOut.set_datasize(oPack->getData()->size());
+	std::string headerPackStr = phOut.SerializeAsString();
+	boost::shared_ptr<std::vector<unsigned char>> dataOut = boost::make_shared<std::vector<unsigned char>>(HSI_OUT_SIZE + headerPackStr.size() + oPack->getData()->size());
+	if (bEndian) {
+		dataOut->at(0) = headerPackStr.size() & 0xff;
+		dataOut->at(1) = (headerPackStr.size() >> 8) & 0xff;
+	}
+	else {
+		dataOut->at(1) = headerPackStr.size() & 0xff;
+		dataOut->at(0) = (headerPackStr.size() >> 8) & 0xff;
+	}
+	std::copy(headerPackStr.begin(), headerPackStr.end(), dataOut->begin() + HSI_OUT_SIZE);
+	std::copy(oPack->getData()->begin(), oPack->getData()->end(), dataOut->begin() + HSI_OUT_SIZE + headerPackStr.size());
+	return dataOut;
+}
+
+boost::shared_ptr<IPacket> HeaderManagerCPP::parsePacket(unsigned char * data, std::size_t size, unsigned int & bytesToReceive)
+{
+	if (parseStage == 0) {
+		parseStage++;
+		activeIPack = genIPacketHandler();
+		bytesToReceive = getHSI(data);
+		return nullptr;
+	}
+	if (parseStage == 1) {
+		ProtobufPackets::PackHeaderIn phIn;
+		phIn.ParseFromArray(data, size);
+		activeIPack->setLocKey(phIn.lockey());
+		activeIPack->setServerRead(phIn.serverread());
+		std::vector<IDType> sendToIDs(phIn.sendtoids().begin(), phIn.sendtoids().end());
+		activeIPack->setSendToClients(sendToIDs);
+		if (phIn.datasize() == 0) {
+			parseStage = 0;
+			activeIPack->setData(boost::make_shared<std::string>());
+			bytesToReceive = getInitialReceiveSize();
+			auto iPack = activeIPack;
+			activeIPack = nullptr;
+			return iPack;
+		}
+		else {
+			parseStage++;
+			bytesToReceive = phIn.datasize();
+			return nullptr;
+		}
+	}
+	if (parseStage == 2) {
+		parseStage = 0;
+		activeIPack->setData(boost::make_shared<std::string>((char*)data, size));
+		boost::shared_ptr<IPacket> iPack = activeIPack;
+		activeIPack = nullptr;
+		bytesToReceive = getInitialReceiveSize();
+		return iPack;
+	}
+	return nullptr;
+}
+
+HeaderManagerCPP::~HeaderManagerCPP()
+{
 }
 
 uint16_t HeaderManagerCPP::getHSI(unsigned char* data)
@@ -20,77 +85,4 @@ uint16_t HeaderManagerCPP::getHSI(unsigned char* data)
 	{
 		return ((data[0] & 0xff) << 8) | (data[1] & 0xff);
 	}
-}
-
-HeaderManagerCPP::~HeaderManagerCPP()
-{
-}
-
-boost::shared_ptr<std::vector<unsigned char>> HeaderManagerCPP::encryptHeaderAsBigEndian(boost::shared_ptr<OPacket> oPack)
-{
-	if (oPack->getData() == nullptr)
-	{
-		throw std::invalid_argument("No Data in the OPacket");
-	}
-	ProtobufPackets::PackHeaderOut phOut;
-	phOut.set_lockey(oPack->getLocKey());
-	phOut.set_sentfromid(oPack->getSenderID());
-	phOut.set_datasize(oPack->getData()->size());
-	std::string headerPackStr = phOut.SerializeAsString();
-	boost::shared_ptr<std::vector<unsigned char>> dataOut = boost::make_shared<std::vector<unsigned char>>(HSI_OUT_SIZE + headerPackStr.size() + oPack->getData()->size());
-	dataOut->at(0) = headerPackStr.size() & 0xff;
-	dataOut->at(1) = (headerPackStr.size() >> 8) & 0xff;
-	std::copy(headerPackStr.begin(), headerPackStr.end(), dataOut->begin() + HSI_OUT_SIZE);
-	std::copy(oPack->getData()->begin(), oPack->getData()->end(), dataOut->begin() + HSI_OUT_SIZE + headerPackStr.size());
-	return dataOut;
-}
-
-boost::shared_ptr<std::vector<unsigned char>> HeaderManagerCPP::encryptHeaderToBigEndian(boost::shared_ptr<OPacket> oPack)
-{
-	if (oPack->getData() == nullptr)
-	{
-		throw std::invalid_argument("No Data in the OPacket");
-	}
-	ProtobufPackets::PackHeaderOut phOut; 
-	phOut.set_lockey(oPack->getLocKey());
-	phOut.set_sentfromid(oPack->getSenderID());
-	phOut.set_datasize(oPack->getData()->size());
-	std::string headerPackStr = phOut.SerializeAsString();
-	boost::shared_ptr<std::vector<unsigned char>> dataOut = boost::make_shared<std::vector<unsigned char>>(HSI_OUT_SIZE + headerPackStr.size() + oPack->getData()->size());
-	dataOut->at(1) = headerPackStr.size() & 0xff;
-	dataOut->at(0) = (headerPackStr.size() >> 8) & 0xff;
-	std::copy(headerPackStr.begin(), headerPackStr.end(), dataOut->begin() + HSI_OUT_SIZE);
-	std::copy(oPack->getData()->begin(), oPack->getData()->end(), dataOut->begin() + HSI_OUT_SIZE + headerPackStr.size());
-	return dataOut;
-}
-
-boost::shared_ptr<IPacket> HeaderManagerCPP::decryptHeaderAsBigEndian(unsigned char* data, unsigned int size, ClientPtr client)
-{
-	boost::shared_ptr<IPacket> iPack = boost::make_shared<IPacket>();
-	ProtobufPackets::PackHeaderIn phIn;
-	phIn.ParseFromArray(data, size);
-	std::vector<IDType> sendToIDs(phIn.sendtoids().begin(), phIn.sendtoids().end());
-	uint32_t mainDataSize = phIn.datasize();
-	//boost::shared_ptr<std::string> mainPackDataStr = boost::make_shared<std::string>(mainDataSize);
-	char locKeyCpy[3];
-	for (int i = 0; i < 2; i++) {
-			locKeyCpy[i] = phIn.lockey().at(i);
-	}
-	locKeyCpy[2] = '\0';
-	setIPack(iPack, locKeyCpy, client, sendToIDs, nullptr, phIn.serverread());
-	iPack->setDataSize(mainDataSize);
-	return iPack;
-}
-
-boost::shared_ptr<IPacket> HeaderManagerCPP::decryptHeaderFromBigEndian(unsigned char* data, unsigned int size, ClientPtr client)
-{
-	boost::shared_ptr<IPacket> iPack = boost::make_shared<IPacket>();
-	ProtobufPackets::PackHeaderIn phIn;
-	phIn.ParseFromArray(data, size);
-	std::vector<IDType> sendToIDs(phIn.sendtoids().begin(), phIn.sendtoids().end());
-	uint32_t mainDataSize = phIn.datasize();
-	//boost::shared_ptr<std::string> mainPackDataStr = boost::make_shared<std::string>(data->begin() + HSI_IN_SIZE + headerPackSize, data->begin() + size);
-	setIPack(iPack, const_cast<char*>(phIn.lockey().c_str()), client, sendToIDs, nullptr, phIn.serverread());
-	iPack->setDataSize(mainDataSize);
-	return iPack;
 }

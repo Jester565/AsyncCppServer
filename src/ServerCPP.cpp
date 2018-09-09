@@ -1,9 +1,10 @@
 #include "ServerCPP.h"
-#include "TCPAcceptorCPP.h"
+#include "TCPAcceptor.h"
 #include "HeaderManagerCPP.h"
 #include "ClientCPP.h"
 #include "ClientManagerCPP.h"
 #include "UDPManager.h"
+#include "TCPConnection.h"
 #include <ServicePool.h>
 #include <PacketManager.h>
 
@@ -14,49 +15,45 @@ ServerCPP::ServerCPP(const boost::asio::ip::tcp& ipVersion)
 
 void ServerCPP::createManagers()
 {
-	servicePool = new ServicePool();
-	pm = boost::make_shared<PacketManager>(this);
-	cm = new ClientManagerCPP(this);
+	Server::createManagers();
+	udpManager = boost::make_shared<UDPManager>(this);
 }
 
-HeaderManager* ServerCPP::createHeaderManager()
+boost::shared_ptr<HeaderManager> ServerCPP::createHeaderManager()
 {
-	return new HeaderManagerCPP(this);
+	return boost::make_shared<HeaderManagerCPP>([&]() {
+		return createIPacket();
+	});
 }
 
 void ServerCPP::run(uint16_t port)
 {
-	tcpAcceptor = boost::make_shared<TCPAcceptorCPP>(this);
-	tcpAcceptor->detach(port);
-	udpManager = boost::make_shared<UDPManager>(this);
+	Server::run(port);
 	udpManager->detach(port);
-	servicePool->run();
 }
 
 void ServerCPP::run(uint16_t tcpPort, uint16_t udpPort)
 {
-		tcpAcceptor = boost::make_shared<TCPAcceptorCPP>(this);
-		tcpAcceptor->detach(tcpPort);
-		udpManager = boost::make_shared<UDPManager>(this);
-		udpManager->detach(udpPort);
-		servicePool->run();
+	Server::run(tcpPort);
+	udpManager->detach(udpPort);
 }
 
 ClientPtr ServerCPP::createClient(boost::shared_ptr<TCPConnection> tcpConnection, IDType id)
 {
-	return boost::make_shared<ClientCPP>(tcpConnection, this, id);
+	return boost::make_shared<ClientCPP>(id, tcpConnection, packetManager);
 }
 
 void ServerCPP::destroyManagers() {
-		udpManager = nullptr;
+	Server::destroyManagers();
+	udpManager = nullptr;
 }
 
 void ServerCPP::shutdownIO()
 {
-		Server::shutdownIO();
-		if (udpManager != nullptr) {
-				udpManager->close();
-		}
+	Server::shutdownIO();
+	if (udpManager != nullptr) {
+			udpManager->close();
+	}
 }
 
 ServerCPP::~ServerCPP()

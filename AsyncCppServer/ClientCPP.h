@@ -4,7 +4,7 @@
 class ClientCPP : public Client
 {
 public:
-	ClientCPP(boost::shared_ptr<TCPConnection> tcpConnection, Server* server, IDType cID);
+	ClientCPP(IDType cID, boost::shared_ptr<TCPConnection> tcpConnection, boost::shared_ptr<PacketManager> packetManager, ClientDisconnectHandler handler = nullptr);
 	const boost::asio::ip::udp::endpoint* getUDPRemoteEP() const
 	{
 		return udpRemoteEP;

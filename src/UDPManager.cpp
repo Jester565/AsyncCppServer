@@ -76,49 +76,25 @@ void UDPManager::asyncReceive(const boost::system::error_code& error, unsigned i
 		std::cerr << "Error occured in UDP Reading: " << error << " - " << error.message() << std::endl;
 		return;
 	}
-	int bytesProcessed = 0;
-	while (bytesProcessed < nBytes)
-	{
-		ClientPtr sender = server->getClientManager()->getClient(receiveEP.address().to_string(), receiveEP.port());
-		if (sender != nullptr)
-		{
-			if (bytesProcessed + HeaderManagerCPP::HSI_IN_SIZE > nBytes)
-			{
-				std::cerr << "Bytes processed exceeded nBytes" << std::endl;
-				break;
-			}
-			uint16_t headerPackSize = ((HeaderManagerCPP*)hm)->getHSI(receiveData->data() + bytesProcessed);
-			bytesProcessed += HeaderManagerCPP::HSI_IN_SIZE;
-			if (bytesProcessed + headerPackSize > nBytes)
-			{
-				std::cerr << "Bytes processed exceeded nBytes" << std::endl;
-				break;
-			}
-			boost::shared_ptr<IPacket> iPack = hm->decryptHeader(receiveData->data() + bytesProcessed, headerPackSize, sender);
-			bytesProcessed += headerPackSize;
-			uint32_t mainDataSize = iPack->getDataSize();
-			if (bytesProcessed + mainDataSize > nBytes)
-			{
-				std::cerr << "Bytes processed exceeded nBytes" << std::endl;
-				break;
-			}
-			if (mainDataSize > 0)
-			{
-				iPack->setData(receiveData->begin() + bytesProcessed, receiveData->begin() + bytesProcessed + mainDataSize);
-			}
-			else
-			{
-				std::vector <unsigned char> mainData;
-				iPack->setData(mainData.begin(), mainData.end());
-			}
-			bytesProcessed += mainDataSize;
+	ClientPtr sender = server->getClientManager()->getClient(receiveEP.address().to_string(), receiveEP.port());
+	if (sender != nullptr)
+	{	
+		unsigned int bytesToReceive = hm->getInitialReceiveSize();
+		unsigned int dataI = 0;
+		boost::shared_ptr<IPacket> iPack = nullptr;
+		do {
+			unsigned int fakeBytesReceived = bytesToReceive;
+			iPack = hm->parsePacket(receiveData->data() + dataI, fakeBytesReceived, bytesToReceive);
+			dataI += fakeBytesReceived;
+		} while (iPack == nullptr && dataI + bytesToReceive <= nBytes);
+		if (iPack != nullptr) {
+			iPack->setSender(sender);
 			server->getPacketManager()->process(iPack);
 		}
-		else
-		{
-			std::cerr << "Could not match IP of sender with client" << std::endl;
-			break;
-		}
+	}
+	else
+	{
+		std::cerr << "Could not match IP of sender with client: " << receiveEP.address().to_string() << ":" << receiveEP.port() << std::endl;
 	}
 	read();
 }
@@ -148,7 +124,7 @@ void UDPManager::send(const udp::endpoint* remoteEP, boost::shared_ptr<std::vect
 
 void UDPManager::send(const udp::endpoint* remoteEP, boost::shared_ptr<OPacket> oPack)
 {
-	boost::shared_ptr<std::vector<unsigned char>> sendData = hm->encryptHeader(oPack);
+	boost::shared_ptr<std::vector<unsigned char>> sendData = hm->serializePacket(oPack);
 	if (sendData->size() > MAX_UDP_DATA_SIZE)
 	{
 		std::cerr << "The size of send data was greater than the MAX_UDP_DATA_SIZE" << std::endl;
@@ -180,6 +156,7 @@ void UDPManager::asyncSend(const boost::system::error_code& error, boost::shared
 				std::cerr << "Error occured in UDP Sending: " << error.message() << std::endl;
 		}
 		queueSendDataMutex.lock();
+		queueSendData.pop();
 		while (!queueSendData.empty())
 		{
 				std::cout << "Queue used" << std::endl;
@@ -193,10 +170,6 @@ void UDPManager::asyncSend(const boost::system::error_code& error, boost::shared
 
 UDPManager::~UDPManager()
 {
-		if (hm != nullptr) {
-				delete hm;
-				hm = nullptr;
-		}
 		if (receiveData != nullptr)
 		{
 				delete receiveData;

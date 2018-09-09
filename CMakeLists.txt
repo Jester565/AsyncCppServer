@@ -17,7 +17,7 @@ set(Boost_USE_STATIC_RUNTIME ON)
 find_package(Boost 1.66.0 COMPONENTS thread REQUIRED)
 
 set(asyncserverparentbuild true CACHE BOOL "Add AsyncServerParent as subproject")
-set(asyncserverparentinclude "AsyncServerParent/asyncserverparent" CACHE STRING "Include directory of AsyncServerParent")
+set(asyncserverparentinclude "${CMAKE_CURRENT_SOURCE_DIR}/AsyncServerParent/asyncserverparent" CACHE STRING "Include directory of AsyncServerParent")
 set(asyncserverparentlibdir "" CACHE STRING "Directory of AsyncServerParent libraries")
 set(asyncserverparentlib "AsyncServerParent" CACHE STRING "Name of AsyncServerParent library")
 
@@ -29,8 +29,6 @@ set(HEADERS
     ${HEADER_DIR}/ClientManagerCPP.h
     ${HEADER_DIR}/HeaderManagerCPP.h
     ${HEADER_DIR}/ServerCPP.h
-    ${HEADER_DIR}/TCPAcceptorCPP.h
-    ${HEADER_DIR}/TCPConnectionCPP.h
     ${HEADER_DIR}/UDPManager.h)
 
 set(SOURCES
@@ -38,8 +36,6 @@ set(SOURCES
     ${SOURCE_DIR}/ClientManagerCPP.cpp
     ${SOURCE_DIR}/HeaderManagerCPP.cpp
     ${SOURCE_DIR}/ServerCPP.cpp
-    ${SOURCE_DIR}/TCPAcceptorCPP.cpp
-    ${SOURCE_DIR}/TCPConnectionCPP.cpp
     ${SOURCE_DIR}/UDPManager.cpp)
 
 set (PROTOS 
