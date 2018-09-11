@@ -26,5 +26,5 @@ cmake .. -G "Visual Studio 15 2017" -A x64 -T host=x64        #For Ubuntu don't 
 ```
 Run make or build the solution  
 
-#### Examples
+## Examples
 See [Tropadom2Server](https://github.com/Jester565/Tropadom2Server).
